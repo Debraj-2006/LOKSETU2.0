@@ -119,12 +119,10 @@ export default function CitizenDashboard() {
     }, 100);
   };
 
-  // Since the Bill Analyzer Python backend runs locally, we always route to localhost
-  // to avoid HTTPS to HTTP Mixed Content blocking and tunnel passwords.
-  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.');
-  const analyzerUrl = isLocalHost
-    ? `http://${window.location.hostname}:5174`
-    : 'http://localhost:5174';
+  // Route to the deployed Bill Analyzer application (dynamic: localhost in dev, firebase in prod)
+  const analyzerUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5174'
+    : 'https://wbsedcl-bill-analyzer.web.app';
 
   const handleGoToAnalyzer = async (e) => {
     e.preventDefault();

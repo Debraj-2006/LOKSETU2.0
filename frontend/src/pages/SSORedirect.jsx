@@ -11,7 +11,9 @@ export default function SSORedirect() {
 
   useEffect(() => {
     const handleSSO = async () => {
-      const returnUrl = searchParams.get('return_url') || 'http://localhost:5174/sso';
+      const returnUrl = searchParams.get('return_url') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5174/sso'
+        : 'https://wbsedcl-bill-analyzer.web.app/sso');
 
       if (!user) {
         setStatus('You are not logged in. Redirecting to LokSetu Login...');

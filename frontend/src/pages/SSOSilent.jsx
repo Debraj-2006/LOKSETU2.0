@@ -9,10 +9,22 @@ export default function SSOSilent() {
     if (loading) return;
 
     const performSilentSSO = async () => {
-      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.');
-      const targetOrigin = isLocalHost
-        ? `http://${window.location.hostname}:5174`
-        : 'http://localhost:5174';
+      let targetOrigin = 'https://wbsedcl-bill-analyzer.web.app';
+      try {
+        if (document.referrer) {
+          const referrerOrigin = new URL(document.referrer).origin;
+          const allowedOrigins = [
+            'https://wbsedcl-bill-analyzer.web.app',
+            'http://localhost:5174',
+            'http://127.0.0.1:5174'
+          ];
+          if (allowedOrigins.includes(referrerOrigin) || referrerOrigin.startsWith('http://localhost:') || referrerOrigin.startsWith('http://127.0.0.1:')) {
+            targetOrigin = referrerOrigin;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing referrer:', e);
+      }
 
       if (!user) {
         // Send a postMessage notifying the parent that no active session was found
