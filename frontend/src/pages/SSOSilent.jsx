@@ -9,13 +9,16 @@ export default function SSOSilent() {
     if (loading) return;
 
     const performSilentSSO = async () => {
-      let targetOrigin = 'http://localhost:5174';
+      let targetOrigin = window.location.origin;
       try {
         if (document.referrer) {
           const referrerOrigin = new URL(document.referrer).origin;
           const allowedOrigins = [
+            window.location.origin,
             'https://wbsedcl-bill-analyzer.web.app',
             'https://bill-analyzer-hinc.vercel.app',
+            'http://localhost:5173',
+            'http://127.0.0.1:5173',
             'http://localhost:5174',
             'http://127.0.0.1:5174'
           ];

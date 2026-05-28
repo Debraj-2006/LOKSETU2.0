@@ -8,10 +8,11 @@ export default function SSORedirect() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState('Initializing LokSetu SSO handshake...');
+  const [ssoDestination, setSsoDestination] = useState(null);
 
   useEffect(() => {
     const handleSSO = async () => {
-      const returnUrl = searchParams.get('return_url') || 'http://localhost:5174/sso';
+      const returnUrl = searchParams.get('return_url') || `${window.location.origin}/sso`;
 
       if (!user) {
         setStatus('You are not logged in. Redirecting to LokSetu Login...');
@@ -41,6 +42,16 @@ export default function SSORedirect() {
 
       const destination = `${returnUrl}?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&timestamp=${encodeURIComponent(timestamp)}&hash=${hashHex}`;
       
+      // Debug: expose the final destination when requested
+      console.log('LokSetu SSO destination ->', destination);
+      const debug = searchParams.get('debug_sso');
+      if (debug) {
+        setStatus(`Debug SSO URL prepared: ${destination}`);
+        setSsoDestination(destination);
+        // If in debug mode, show the URL and provide a manual proceed button
+        return;
+      }
+
       setStatus('Redirecting to Bill Analyzer...');
       setTimeout(() => {
         window.location.replace(destination);
@@ -70,6 +81,17 @@ export default function SSORedirect() {
           <p className="text-slate-300 text-sm font-semibold tracking-wide animate-pulse">
             {status}
           </p>
+          {ssoDestination && (
+            <div className="mt-4 w-full">
+              <div className="text-xs text-white/60 break-words mb-2">{ssoDestination}</div>
+              <button
+                onClick={() => window.location.replace(ssoDestination)}
+                className="btn-primary w-full py-2 rounded-lg"
+              >
+                Proceed to Bill Analyzer
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

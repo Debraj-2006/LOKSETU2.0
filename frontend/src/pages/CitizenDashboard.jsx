@@ -119,7 +119,9 @@ export default function CitizenDashboard() {
     }, 100);
   };
 
-  const analyzerUrl = 'https://bill-analyzer-hinc.vercel.app';
+  const analyzerUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5174'
+    : 'https://bill-analyzer-hinc.vercel.app';
 
   const handleGoToAnalyzer = async (e) => {
     e.preventDefault();
@@ -128,21 +130,13 @@ export default function CitizenDashboard() {
       toast.error('Ensure you are logged in with a valid email.');
       return;
     }
-    const name = profile?.name || 'Citizen';
-    const phone = profile?.phone || user?.phoneNumber || '';
-    const timestamp = new Date().toISOString();
-    const secret = "loksetu-shared-secret-key-2026";
-    
-    // Generate SHA-256 hash using browser's native Web Crypto API
-    const msg = `${email}:${name}:${phone}:${timestamp}:${secret}`;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(msg);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    const ssoUrl = `${analyzerUrl}/sso?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&timestamp=${encodeURIComponent(timestamp)}&hash=${hashHex}`;
-    window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+    const returnUrl = `${analyzerUrl}/sso`;
+    const redirectUrl = `${window.location.origin}/sso-redirect?return_url=${encodeURIComponent(returnUrl)}`;
+    const analyzerWindow = window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+    if (!analyzerWindow) {
+      toast.error('Please allow popups to open the Bill Analyzer.');
+      return;
+    }
   };
 
   return (
