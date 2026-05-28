@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { doc, collection, onSnapshot, addDoc } from 'firebase/firestore';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { doc, collection, onSnapshot, addDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../utils/firebaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import StatusBadge from '../components/StatusBadge';
 import UpvoteButton from '../components/UpvoteButton';
-import { MapPin, Clock, ChevronLeft, Loader2, AlertTriangle, Send, MessageSquare } from 'lucide-react';
+import { MapPin, Clock, ChevronLeft, Loader2, AlertTriangle, Send, MessageSquare, Trash2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
@@ -19,10 +19,43 @@ const formatDate = (iso) =>
 export default function ComplaintDetail() {
   const { id } = useParams();
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this complaint?\n\nThis action is permanent and cannot be undone. All status updates, comments, and upvotes will be removed.'
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      // Delete subcollections from Firestore client-side
+      const updatesSnap = await getDocs(collection(db, 'complaints', id, 'updates'));
+      for (const d of updatesSnap.docs) await deleteDoc(d.ref);
+
+      const commentsSnap = await getDocs(collection(db, 'complaints', id, 'comments'));
+      for (const d of commentsSnap.docs) await deleteDoc(d.ref);
+
+      // Delete the complaint document itself
+      await deleteDoc(doc(db, 'complaints', id));
+
+      // Also delete the user's own upvote doc if it exists
+      try { await deleteDoc(doc(db, 'upvotes', `${profile.id}_${id}`)); } catch (_) {}
+
+      toast.success('Complaint deleted successfully');
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error(err.message || 'Failed to delete complaint');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -126,9 +159,23 @@ export default function ComplaintDetail() {
 
   return (
     <div className="page-container max-w-3xl animate-fade-in">
-      <Link to="/dashboard" className="inline-flex items-center gap-1 text-white/40 hover:text-white text-sm mb-6 transition-colors">
-        <ChevronLeft size={15} /> Back to Dashboard
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link to="/dashboard" className="inline-flex items-center gap-1 text-white/40 hover:text-white text-sm transition-colors">
+          <ChevronLeft size={15} /> Back to Dashboard
+        </Link>
+
+        {/* Delete button — only visible to complaint owner */}
+        {complaint.citizen_id === profile?.id && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-red-400/70 hover:text-red-400 bg-red-500/5 hover:bg-red-500/15 border border-red-500/10 hover:border-red-500/30 px-3.5 py-2 rounded-xl transition-all duration-300 disabled:opacity-50"
+          >
+            {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+            {deleting ? 'Deleting…' : 'Delete Complaint'}
+          </button>
+        )}
+      </div>
 
       {/* Escalation alert */}
       {complaint.is_escalated && !['resolved','cancelled'].includes(complaint.status) && (
@@ -174,9 +221,9 @@ export default function ComplaintDetail() {
       </div>
 
       {/* Photo / Before & After Slider */}
-      {complaint.photo_url && (
+      {(complaint.photo_url || complaint.resolved_image) && (
         <div className="mb-5">
-          {complaint.status === 'resolved' && complaint.resolved_image ? (
+          {complaint.status === 'resolved' && complaint.resolved_image && complaint.photo_url ? (
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-white/40 tracking-wider uppercase pl-2 flex items-center gap-1.5">
                 <span className="inline-block w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
@@ -187,11 +234,19 @@ export default function ComplaintDetail() {
                 afterImage={complaint.resolved_image}
               />
             </div>
-          ) : (
+          ) : complaint.status === 'resolved' && complaint.resolved_image && !complaint.photo_url ? (
+            <div className="glass rounded-3xl overflow-hidden">
+              <h3 className="text-xs font-bold text-white/40 tracking-wider uppercase pl-2 pt-4 flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                Resolution Proof Photo
+              </h3>
+              <img src={complaint.resolved_image} alt="Resolution proof" className="w-full max-h-72 object-cover p-3 rounded-3xl" />
+            </div>
+          ) : complaint.photo_url ? (
             <div className="glass rounded-3xl overflow-hidden">
               <img src={complaint.photo_url} alt="Complaint photo" className="w-full max-h-72 object-cover" />
             </div>
-          )}
+          ) : null}
         </div>
       )}
 

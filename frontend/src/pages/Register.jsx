@@ -35,7 +35,7 @@ export default function Register() {
   const { signIn, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const [registerType, setRegisterType] = useState('citizen'); // 'citizen' or 'admin'
-  const [form, setForm] = useState({ name: '', phone: '', area: '', email: '', password: '', adminCode: '' });
+  const [form, setForm] = useState({ name: '', phone: '', area: '', email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -50,17 +50,16 @@ export default function Register() {
     
     let role = 'citizen';
     if (registerType === 'admin') {
-      if (!form.adminCode) {
-        toast.error('Admin secret code is required to register as an administrator');
+      if (!form.area) {
+        toast.error('Please select an assigned district first');
         return;
       }
-      
       const baseSecret = 'loksetu-admin-2024';
       const derivedCode = `${baseSecret}-${form.area.toLowerCase().replace(/\s+/g, '')}`;
-      const enteredCode = form.adminCode.trim();
+      const enteredPassword = form.password.trim();
       
-      if (enteredCode !== baseSecret && enteredCode !== derivedCode) {
-        toast.error('Invalid admin verification code');
+      if (enteredPassword !== baseSecret && enteredPassword !== derivedCode) {
+        toast.error(`Invalid admin password. You must use the official admin code for ${form.area}.`);
         return;
       }
       role = 'admin';
@@ -210,7 +209,9 @@ export default function Register() {
 
             {/* Password field */}
             <div>
-              <label className="label">Password</label>
+              <label className="label">
+                {registerType === 'admin' ? 'Admin Password (District Code)' : 'Password'}
+              </label>
               <div className="relative">
                 <input
                   required
@@ -218,7 +219,7 @@ export default function Register() {
                   value={form.password}
                   onChange={(e) => set('password', e.target.value)}
                   className="input pr-10"
-                  placeholder="Min. 6 characters"
+                  placeholder={registerType === 'admin' ? 'Enter district admin code (e.g. loksetu-admin-2024-...)' : 'Min. 6 characters'}
                 />
                 <button
                   type="button"
@@ -229,21 +230,6 @@ export default function Register() {
                 </button>
               </div>
             </div>
-
-            {/* Conditional Admin Secret Code Input */}
-            {registerType === 'admin' && (
-              <div className="animate-slide-up">
-                <label className="label text-red-400 font-bold">Admin Verification Code</label>
-                <input
-                  required
-                  value={form.adminCode}
-                  onChange={(e) => set('adminCode', e.target.value)}
-                  type="password"
-                  className="input border-red-500/20 focus:border-red-500 focus:ring-red-500/20"
-                  placeholder="Enter admin secret code"
-                />
-              </div>
-            )}
 
             {/* Submit Button */}
             <button

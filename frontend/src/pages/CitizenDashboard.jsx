@@ -119,10 +119,7 @@ export default function CitizenDashboard() {
     }, 100);
   };
 
-  // Route to the deployed Bill Analyzer application (dynamic: localhost in dev, firebase in prod)
-  const analyzerUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5174'
-    : 'https://wbsedcl-bill-analyzer.web.app';
+  const analyzerUrl = 'http://localhost:5174';
 
   const handleGoToAnalyzer = async (e) => {
     e.preventDefault();

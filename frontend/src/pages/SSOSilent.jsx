@@ -9,7 +9,7 @@ export default function SSOSilent() {
     if (loading) return;
 
     const performSilentSSO = async () => {
-      let targetOrigin = 'https://wbsedcl-bill-analyzer.web.app';
+      let targetOrigin = 'http://localhost:5174';
       try {
         if (document.referrer) {
           const referrerOrigin = new URL(document.referrer).origin;

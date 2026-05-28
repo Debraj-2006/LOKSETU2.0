@@ -328,4 +328,57 @@ router.post('/:id/upvote', authenticate, async (req, res) => {
   }
 });
 
+// DELETE /api/complaints/:id — citizen deletes their own complaint
+router.delete('/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const complaintRef = db.collection('complaints').doc(id);
+    const complaintDoc = await complaintRef.get();
+
+    if (!complaintDoc.exists) {
+      return res.status(404).json({ error: 'Complaint not found' });
+    }
+
+    const complaint = complaintDoc.data();
+
+    // Only the citizen who filed it can delete it
+    if (complaint.citizen_id !== req.profile.id) {
+      return res.status(403).json({ error: 'You can only delete your own complaints' });
+    }
+
+    // Delete subcollections: updates
+    const updatesSnap = await complaintRef.collection('updates').get();
+    const batch1 = db.batch();
+    updatesSnap.docs.forEach(doc => batch1.delete(doc.ref));
+    if (updatesSnap.docs.length > 0) await batch1.commit();
+
+    // Delete subcollections: comments
+    const commentsSnap = await complaintRef.collection('comments').get();
+    const batch2 = db.batch();
+    commentsSnap.docs.forEach(doc => batch2.delete(doc.ref));
+    if (commentsSnap.docs.length > 0) await batch2.commit();
+
+    // Delete related upvotes
+    const upvotesSnap = await db.collection('upvotes').where('complaint_id', '==', id).get();
+    const batch3 = db.batch();
+    upvotesSnap.docs.forEach(doc => batch3.delete(doc.ref));
+    if (upvotesSnap.docs.length > 0) await batch3.commit();
+
+    // Delete related notifications
+    const notificationsSnap = await db.collection('notifications').where('complaint_id', '==', id).get();
+    const batch4 = db.batch();
+    notificationsSnap.docs.forEach(doc => batch4.delete(doc.ref));
+    if (notificationsSnap.docs.length > 0) await batch4.commit();
+
+    // Finally, delete the complaint document
+    await complaintRef.delete();
+
+    res.json({ message: 'Complaint deleted successfully' });
+  } catch (err) {
+    console.error('Delete complaint error:', err);
+    res.status(500).json({ error: 'Failed to delete complaint' });
+  }
+});
+
 module.exports = router;

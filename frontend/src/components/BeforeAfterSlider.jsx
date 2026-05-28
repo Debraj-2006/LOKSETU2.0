@@ -10,18 +10,18 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   return (
     <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] rounded-3xl overflow-hidden border border-white/10 shadow-2xl select-none group">
       
-      {/* "Before" Image - Base layer */}
+      {/* "After" Image - Base layer (shown on the RIGHT side) */}
       <img
-        src={before}
-        alt="Before Repair"
+        src={after}
+        alt="After Repair"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
       />
-      {/* Before Badge */}
-      <span className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border border-white/10 z-20">
-        Before (Citizen)
+      {/* After Badge (right side) */}
+      <span className="absolute bottom-4 right-4 bg-green-500/80 backdrop-blur-md text-white text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border border-green-500/20 z-20">
+        After (Resolved ✅)
       </span>
 
-      {/* "After" Image - Clipped layer */}
+      {/* "Before" Image - Clipped layer (shown on the LEFT side) */}
       <div
         className="absolute inset-0 w-full h-full pointer-events-none z-10"
         style={{
@@ -29,13 +29,13 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
         }}
       >
         <img
-          src={after}
-          alt="After Repair"
+          src={before}
+          alt="Before Repair"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
-        {/* After Badge */}
-        <span className="absolute bottom-4 right-4 bg-primary-500/80 backdrop-blur-md text-white text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border border-primary-500/20 z-20">
-          After (Resolved ✅)
+        {/* Before Badge (left side) */}
+        <span className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border border-white/10 z-20">
+          Before (Citizen)
         </span>
       </div>
 

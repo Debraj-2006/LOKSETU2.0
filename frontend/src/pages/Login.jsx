@@ -42,9 +42,18 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loginType === 'admin' && !form.district) {
-      toast.error('Please select your assigned district');
-      return;
+    if (loginType === 'admin') {
+      if (!form.district) {
+        toast.error('Please select your assigned district');
+        return;
+      }
+      const baseSecret = 'loksetu-admin-2024';
+      const derivedCode = `${baseSecret}-${form.district.toLowerCase().replace(/\s+/g, '')}`;
+      const enteredPassword = form.password.trim();
+      if (enteredPassword !== baseSecret && enteredPassword !== derivedCode) {
+        toast.error(`Invalid admin password. You must use the official admin code for ${form.district}.`);
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -161,7 +170,9 @@ export default function Login() {
 
             {/* Password field */}
             <div>
-              <label className="label">Password</label>
+              <label className="label">
+                {loginType === 'admin' ? 'Admin Password (District Code)' : 'Password'}
+              </label>
               <div className="relative">
                 <input
                   type={showPw ? 'text' : 'password'}
@@ -169,7 +180,7 @@ export default function Login() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="input pr-10"
-                  placeholder="••••••••"
+                  placeholder={loginType === 'admin' ? 'Enter district admin code' : '••••••••'}
                 />
                 <button
                   type="button"

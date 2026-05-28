@@ -329,21 +329,28 @@ export default function AdminComplaintDetail() {
             </div>
 
             {/* Photo / Before-After */}
-            {complaint.photo_url && (
+            {(complaint.photo_url || complaint.resolved_image) && (
               <div className="glass rounded-3xl p-5">
                 <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
                   📸 Evidence Photo
                 </h3>
-                {complaint.status === 'resolved' && complaint.resolved_image ? (
+                {complaint.status === 'resolved' && complaint.resolved_image && complaint.photo_url ? (
                   <div className="space-y-2">
                     <p className="text-xs text-white/30 font-medium">Before & After — Drag to compare</p>
                     <BeforeAfterSlider beforeImage={complaint.photo_url} afterImage={complaint.resolved_image} />
                   </div>
-                ) : (
+                ) : complaint.status === 'resolved' && complaint.resolved_image && !complaint.photo_url ? (
+                  <div>
+                    <p className="text-xs text-white/30 font-medium mb-2">Resolution Proof Photo</p>
+                    <div className="rounded-2xl overflow-hidden border border-white/10">
+                      <img src={complaint.resolved_image} alt="Resolution proof" className="w-full max-h-72 object-cover" />
+                    </div>
+                  </div>
+                ) : complaint.photo_url ? (
                   <div className="rounded-2xl overflow-hidden border border-white/10">
                     <img src={complaint.photo_url} alt="Complaint evidence" className="w-full max-h-72 object-cover" />
                   </div>
-                )}
+                ) : null}
               </div>
             )}
 
