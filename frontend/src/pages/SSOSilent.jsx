@@ -15,6 +15,7 @@ export default function SSOSilent() {
           const referrerOrigin = new URL(document.referrer).origin;
           const allowedOrigins = [
             'https://wbsedcl-bill-analyzer.web.app',
+            'https://bill-analyzer-hinc.vercel.app',
             'http://localhost:5174',
             'http://127.0.0.1:5174'
           ];

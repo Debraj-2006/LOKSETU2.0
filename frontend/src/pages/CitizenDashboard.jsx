@@ -119,7 +119,7 @@ export default function CitizenDashboard() {
     }, 100);
   };
 
-  const analyzerUrl = 'http://localhost:5174';
+  const analyzerUrl = 'https://bill-analyzer-hinc.vercel.app';
 
   const handleGoToAnalyzer = async (e) => {
     e.preventDefault();
